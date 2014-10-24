@@ -99,7 +99,6 @@ ograd *asl_Ograd(ASL_pfgh *asl, int row) {
 	return asl->i.Ograd_[row];
 }
 
-
 real cconival(ASL_pfgh *asl, int ncon, real *X, fint *nerror) {
 	return (*((ASL*)asl)->p.Conival)((ASL*)asl,ncon,X,nerror);
 }
@@ -144,8 +143,8 @@ type AMPL struct {
 	Cons      [][]string	//Names of variables in constraints
 	Obj       [][]string	//Names of variables in objectives
 
-	varcons   [][]string	//Names of constraints for each variable (variable = row number + 1)
-	varobj    [][]string	//Names of objectives for each variable (constraint = column number + 1)
+	Varcons   [][]string	//Names of constraints for each variable
+	Varobj    [][]string	//Names of objectives for each variable
 
 	C_ASL     *C.struct_ASL_pfgh
 }
@@ -182,6 +181,9 @@ func AMPL_init(stub string) AMPL{
 
 	model.Cons = make([][]string, model.Ncon)
 	model.Obj = make([][]string, model.Nobj)
+
+	model.Varcons = make([][]string, model.Nvar)
+	model.Varobj = make([][]string, model.Nvar)
 
 	model.C_ASL = asl
 
@@ -290,6 +292,30 @@ func AMPL_init(stub string) AMPL{
 		j++	
 	}
 	
+	for i:=0; i < model.Ncon; i++ {
+		cgrad:= C.asl_Cgrad(asl, C.int(i))
+		for cgrad != nil {
+			varno:= int(cgrad.varno)
+			model.Cons[i] = append(model.Cons[i], model.Var_name[varno])
+			if !contains(model.Varcons[varno], model.Con_name[i]) {
+				model.Varcons[varno]=append(model.Varcons[varno], model.Con_name[i])			
+			}	
+			cgrad = cgrad.next	
+		}
+	}
+
+	for i:=0; i < model.Nobj; i++ {
+		ograd:= C.asl_Ograd(asl, C.int(i))
+		for ograd != nil {
+			varno:= int(ograd.varno)
+			model.Obj[i] = append(model.Obj[i], model.Var_name[varno])
+			if !contains(model.Varobj[varno], model.Obj_name[i]) {
+				model.Varobj[varno] =append(model.Varobj[varno], model.Obj_name[i])			
+			}
+			ograd = ograd.next	
+		}
+	}
+
 	return model
 }
 
@@ -337,4 +363,15 @@ func Objgrd(model AMPL, nobj int, point []float64) (gradvec []float64, nerror in
 	C.cobjgrad(model.C_ASL, C.int(nobj), cpoint, ptr, &ne)
 
 	return grad, int(ne)
+}
+
+
+/*
+*	Functions used for AMPL_init()
+*/
+func contains(list []string, s string) bool{
+	for i:=0; i < len(list); i++ {
+		if list[i] == s { return true }
+	}
+	return false
 }
