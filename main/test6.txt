@@ -1,0 +1,153 @@
+Problem name:
+test6.nl
+
+Number of variables:
+17
+
+Number of constraints:
+12
+
+Number of objectives:
+2
+
+Upper variable bounds:
+[100 100 10 10 10 10 1 1 1 1 100 100 1 1 2 20 3]
+
+Lower variable bounds:
+[-100 -100 -10 -10 -10 -10 -1 -1 0 0 0 0 0 0 0 2 -5]
+
+Upper RHS:
+[200 +Inf 20000 100 -0 +Inf +Inf 200 25 1 25 20]
+
+Lower RHS:
+[-Inf 20 -Inf -Inf -0 10 -1 200 -Inf 1 -Inf 10]
+
+Objective Names and Sense:
+_sobj[1] 1
+_sobj[2] 0
+
+Constraint Names and Alg:
+_scon[1] NLG
+_scon[2] NLG
+_scon[3] NLG
+_scon[4] NLG
+_scon[5] NLG
+_scon[6] NLG
+_scon[7] NLG
+_scon[8] NLG
+_scon[9] LG
+_scon[10] LG
+_scon[11] LG
+_scon[12] LG
+
+Variable Names and Type:
+_svar[1] NL
+_svar[2] NL
+_svar[3] NL
+_svar[4] NL
+_svar[5] NL
+_svar[6] NL
+_svar[7] NL
+_svar[8] NL
+_svar[9] NL
+_svar[10] NL
+_svar[11] NL
+_svar[12] OL
+_svar[13] B
+_svar[14] B
+_svar[15] I
+_svar[16] I
+_svar[17] I
+
+
+Variables in Objectives
+
+Objective 0: _svar[11] _svar[12] 
+Objective 1: _svar[1] _svar[2] 
+
+Variables in Constraints
+
+Constraint 0: _svar[1] _svar[2] 
+Constraint 1: _svar[1] _svar[2] 
+Constraint 2: _svar[1] _svar[2] 
+Constraint 3: _svar[3] _svar[4] 
+Constraint 4: _svar[5] _svar[6] 
+Constraint 5: _svar[7] 
+Constraint 6: _svar[7] _svar[8] 
+Constraint 7: _svar[1] _svar[2] _svar[9] _svar[10] 
+Constraint 8: _svar[1] _svar[2] 
+Constraint 9: _svar[9] _svar[10] _svar[13] 
+Constraint 10: _svar[7] _svar[14] _svar[15] 
+Constraint 11: _svar[15] _svar[16] _svar[17] 
+
+Objectives that use the Variable
+
+Variable 0: _sobj[2] 
+Variable 1: _sobj[2] 
+Variable 2: 
+Variable 3: 
+Variable 4: 
+Variable 5: 
+Variable 6: 
+Variable 7: 
+Variable 8: 
+Variable 9: 
+Variable 10: _sobj[1] 
+Variable 11: _sobj[1] 
+Variable 12: 
+Variable 13: 
+Variable 14: 
+Variable 15: 
+Variable 16: 
+
+Constraints that use the Variable
+
+Variable 0: _scon[1] _scon[2] _scon[3] _scon[8] _scon[9] 
+Variable 1: _scon[1] _scon[2] _scon[3] _scon[8] _scon[9] 
+Variable 2: _scon[4] 
+Variable 3: _scon[4] 
+Variable 4: _scon[5] 
+Variable 5: _scon[5] 
+Variable 6: _scon[6] _scon[7] _scon[11] 
+Variable 7: _scon[7] 
+Variable 8: _scon[8] _scon[10] 
+Variable 9: _scon[8] _scon[10] 
+Variable 10: 
+Variable 11: 
+Variable 12: _scon[10] 
+Variable 13: _scon[11] 
+Variable 14: _scon[11] _scon[12] 
+Variable 15: _scon[12] 
+Variable 16: _scon[12] 
+
+Test Functions @ 1-point:
+Constraint Functions
+Constraint 0: 5 (number of errors: 0)
+[4 6 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 1: 0 (number of errors: 0)
+[3 -3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 2: 10998 (number of errors: 0)
+[8991 39996 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 3: -1 (number of errors: 0)
+[0 0 -2 -1 0 0 0 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 4: 0.2909297426825682 (number of errors: 0)
+[0 0 0 0 0.15838531634528577 0.15838531634528577 0 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 5: 1 (number of errors: 0)
+[0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 6: 2 (number of errors: 0)
+[0 0 0 0 0 0 2 2 0 0 0 0 0 0 0 0 0] 0
+Constraint 7: 1 (number of errors: 0)
+[0.5 0.5 0 0 0 0 0 0 0.5 0.5 0 0 0 0 0 0 0] 0
+Constraint 8: 5 (number of errors: 0)
+[2 3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 0
+Constraint 9: 3 (number of errors: 0)
+[0 0 0 0 0 0 0 0 1 1 0 0 1 0 0 0 0] 0
+Constraint 10: 28 (number of errors: 0)
+[0 0 0 0 0 0 12 0 0 0 0 0 0 1 15 0 0] 0
+Constraint 11: 7.7 (number of errors: 0)
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 2 4.7] 0
+Objective Functions
+Objective 0: 8.414709848081348e-05 (number of errors: 0)
+[0 0 0 0 0 0 0 0 0 0 -0.9999459697694132 1 0 0 0 0 0] 0
+Objective 1: 2 (number of errors: 0)
+[1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 0
