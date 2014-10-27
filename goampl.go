@@ -20,97 +20,74 @@ ASL_pfgh *asl_init(char *stub) {
 int asl_nobj(ASL_pfgh *asl) {
 	return asl->i.n_obj_;
 }
-
 int asl_nvar(ASL_pfgh *asl) {
 	return asl->i.n_var_;
 }
-
 int asl_ncon(ASL_pfgh *asl) {
 	return asl->i.n_con_;
 }
-
 int asl_nlvc(ASL_pfgh *asl) {
 	return asl->i.nlvc_;
 }
-
 int asl_nlvo(ASL_pfgh *asl) {
 	return asl->i.nlvo_;
 }
-
 int asl_nwv(ASL_pfgh *asl) {
 	return asl->i.nwv_;
 }
-
 int asl_nlvar(ASL_pfgh *asl) {
 	if (asl->i.nlvc_ > asl->i.nlvo_)
 		return 	asl->i.nlvc_;
 	else return asl->i.nlvo_;
 }
-
 int asl_nbv(ASL_pfgh *asl) {
 	return asl->i.nbv_;
 }
-
 int asl_niv(ASL_pfgh *asl) {
 	return asl->i.niv_;
 }
-
 int asl_otherlinear(ASL_pfgh *asl) {
 	return asl_nvar(asl) - (asl_nlvar(asl) + asl_niv(asl) + asl_nbv(asl) + asl_nwv(asl));
 }
-
 int asl_nlnc(ASL_pfgh *asl) {
 	return asl->i.nlnc_;
 }
-
 int asl_lnc(ASL_pfgh *asl) {
 	return asl->i.lnc_;
 }
-
 int asl_nlc(ASL_pfgh *asl) {
 	return asl->i.nlc_;
 }
-
 int asl_lgeneral(ASL_pfgh *asl) {
 	return asl_ncon(asl) - (asl_nlc(asl) + asl_lnc(asl));
 }
-
 int asl_nlgeneral(ASL_pfgh *asl) {
 	return asl_nlc(asl) - asl_nlnc(asl);
 }
-
 char *asl_objtype(ASL_pfgh *asl) {
 	return asl->i.objtype_;
 }
-
 real *asl_LUrhs(ASL_pfgh *asl) {
 	return asl->i.LUrhs_;
 }
-
 real *asl_LUv(ASL_pfgh *asl) {
 	return asl->i.LUv_;
 }
-
 cgrad *asl_Cgrad(ASL_pfgh *asl, int row) {
 	return asl->i.Cgrad_[row];
 }
-
 ograd *asl_Ograd(ASL_pfgh *asl, int row) {
 	return asl->i.Ograd_[row];
 }
-
 real cconival(ASL_pfgh *asl, int ncon, real *X, fint *nerror) {
 	return (*((ASL*)asl)->p.Conival)((ASL*)asl,ncon,X,nerror);
 }
-
 real cobjval(ASL_pfgh *asl, int np, real *X, fint *nerror) {
 	return (*((ASL*)asl)->p.Objval)((ASL*)asl,np,X,nerror);
 }
-
 void ccongrad(ASL_pfgh *asl, int i, real *X, real *G, fint *nerror) {
 	return (*((ASL*)asl)->p.Congrd)((ASL*)asl,i,X,G,nerror);
 }
-
 void cobjgrad(ASL_pfgh *asl, int np, real *X, real *G, fint *nerror) {
 	return (*((ASL*)asl)->p.Objgrd)((ASL*)asl,np,X,G,nerror);
 }
@@ -216,7 +193,7 @@ func AMPL_init(stub string) AMPL{
 
 //setting variable bounds
 	LUv := unsafe.Pointer(C.asl_LUv(asl))
-	defer C.free(LUv)
+	//defer C.free(LUv)
 	hdr := reflect.SliceHeader{
 		Data: uintptr(LUv),
 		Len: model.Nvar*2,
@@ -232,7 +209,7 @@ func AMPL_init(stub string) AMPL{
 
 //setting upper and lower rhs
 	LUrhs := unsafe.Pointer(C.asl_LUrhs(asl))
-	defer C.free(LUrhs)
+	//defer C.free(LUrhs)
 	hdr2 := reflect.SliceHeader{
 		Data: uintptr(LUrhs),
 		Len: model.Ncon*2,
@@ -246,51 +223,45 @@ func AMPL_init(stub string) AMPL{
 		jj++
 	}
 
-/*	Filling in variable type
-*	NL = Non Linear, LA = Linear Arcs, OL = Other Linear, B = Binary, OI = Other Integer
-*/
+	/* Filling in variable type
+	* NL = Non Linear, LA = Linear Arcs, OL = Other Linear, B = Binary, I = Other Integer
+	*/
 	k:=0
 	for i:= 0; i < int(C.asl_nlvar(asl)); i++ {
 		model.Var_type[k] = "NL"
-		k++	
-	}
+		k++	}
 	for i:= 0; i < int(C.asl_nwv(asl)); i++ {
 		model.Var_type[k] = "LA"	
-		k++
-	}
+		k++	}
 	for i:= 0; i < int(C.asl_otherlinear(asl)); i++ {
 		model.Var_type[k] = "OL"	
-		k++	
-	}
+		k++	}
 	for i:= 0; i < int(C.asl_nbv(asl)); i++ {
 		model.Var_type[k] = "B"	
-		k++	
-	}
-	for i:= 0; i < int(C.asl_nlvar(asl)); i++ {
-		model.Var_type[k] = "OI"	
-		k++	
-	}
-
-/*	Filling in constraint type
-*	NLG = Non Linear General, NLN = Non Linear Network, LN = Linear Network, LG = Linear General 
-*/
+		k++	}
+	for i:= 0; i < int(C.asl_niv(asl)); i++ {
+		model.Var_type[k] = "I"	
+		k++	}
+	/* Filling in constraint type
+	* NLG = Non Linear General, NLN = Non Linear Network, LN = Linear Network, LG = Linear General
+	*/
 	j:=0
-	for i:=0; i < int(C.asl_nlvar(asl)); i++ {
-		model.Con_type[j] = "NLG"
-		j++
-	}
-	for i:=0; i < int(C.asl_nlvar(asl)); i++ {
-		model.Con_type[j] = "NLG"
-		j++
-	}
-	for i:=0; i < int(C.asl_nlvar(asl)); i++ {
-		model.Con_type[j] = "NLG"
-		j++	
-	}
-	for i:=0; i < int(C.asl_nlvar(asl)); i++ {
-		model.Con_type[j] = "NLG"
-		j++	
-	}
+	for i:=0; i < int(C.asl_nlgeneral(asl)); i++ {
+		model.Con_alg[j] = "NLG"
+		j++	}
+	for i:=0; i < int(C.asl_nlnc(asl)); i++ {
+		model.Con_alg[j] = "NLN"
+		j++	}
+	for i:=0; i < int(C.asl_lnc(asl)); i++ {
+		model.Con_alg[j] = "LN"
+		j++	}
+	for i:=0; i < int(C.asl_lgeneral(asl)); i++ {
+		model.Con_alg[j] = "LG"
+		j++	}
+
+	/*
+	* Filling Cons, Varcons, Obj, and Varobj
+	*/
 	
 	for i:=0; i < model.Ncon; i++ {
 		cgrad:= C.asl_Cgrad(asl, C.int(i))
@@ -365,10 +336,19 @@ func Objgrd(model AMPL, nobj int, point []float64) (gradvec []float64, nerror in
 	return grad, int(ne)
 }
 
-
 /*
 *	Functions used for AMPL_init()
 */
+func arrayToSlice(array unsafe.Pointer, length int) unsafe.Pointer {
+	defer C.free(array)
+	slice := reflect.SliceHeader{
+		Data: uintptr(array),
+		Len: length*2,
+		Cap: length*2,
+	}
+	return unsafe.Pointer(&slice)
+}
+
 func contains(list []string, s string) bool{
 	for i:=0; i < len(list); i++ {
 		if list[i] == s { return true }
