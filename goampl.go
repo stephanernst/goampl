@@ -94,6 +94,7 @@ void cobjgrad(ASL_pfgh *asl, int np, real *X, real *G, fint *nerror) {
 */
 import "C"
 import "unsafe"
+import "math"
 import "reflect"
 
 //stores needed data from the ASL struct
@@ -187,7 +188,20 @@ func AMPL_init(stub string) AMPL{
 	}
 	
 	//Filling in constraint type
-	
+	for i:=0; i < model.Ncon; i++ {
+		if math.IsInf(model.RHSup[i], 1) && !math.IsInf(model.RHSlo[i], 0) {
+			model.Con_type[i] = "G"
+		} else if !math.IsInf(model.RHSup[i], 1) && math.IsInf(model.RHSlo[i], 0){
+			model.Con_type[i] = "L"
+		} else if model.RHSup[i] == model.RHSlo[i] {
+			model.Con_type[i] = "E"		
+		} else if !math.IsInf(model.RHSup[i], 1) && !math.IsInf(model.RHSlo[i], 0){
+			model.Con_type[i] = "R"
+		} else {
+			model.Con_type[i] = "N"		
+		}
+		
+	}
 
 	//Filling in Con_name, Obj_name, and Var_name
 	for i:=0; i < model.Ncon; i++ {
