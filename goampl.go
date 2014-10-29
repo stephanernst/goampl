@@ -126,8 +126,8 @@ type AMPL struct {
 	C_ASL     *C.struct_ASL_pfgh
 }
 
-/*
-*	Initializes the AMPL struct
+/*	Initializes all the fields of the AMPL struct
+*	Returns an AMPL struct
 */
 func AMPL_init(stub string) AMPL{
 	var model AMPL
@@ -135,6 +135,7 @@ func AMPL_init(stub string) AMPL{
 	stubc := C.CString(stub)
 	defer C.free(unsafe.Pointer(stubc))
 
+	//Setting up AMPL struct
 	asl = C.asl_init(stubc)	
 	model.Name = stub
 	model.Nvar = int(C.asl_nvar(asl))
@@ -164,24 +165,35 @@ func AMPL_init(stub string) AMPL{
 
 	model.C_ASL = asl
 
-//Filling in Obj_sense
-	obj := unsafe.Pointer(C.asl_objtype(asl))
-	hdr0 := reflect.SliceHeader{
-		Data: uintptr(obj),
-		Len: model.Nobj,
-		Cap: model.Nobj,
-	}
-	obj_byte := *(*[]byte)(unsafe.Pointer(&hdr0))
+	//Filling in Obj_sense, Vblo, Vbup, RHSlo, and RHSup
+	objtype := unsafe.Pointer(C.asl_objtype(asl))
+	LUv     := unsafe.Pointer(C.asl_LUv(asl))
+	LUrhs   := unsafe.Pointer(C.asl_LUrhs(asl))
+	
+	obj := *(*[]byte)   (arrayToSlice(objtype, model.Nobj))
+	vb  := *(*[]float64)(arrayToSlice(LUv, model.Nvar*2))
+	rhs := *(*[]float64)(arrayToSlice(LUrhs, model.Ncon*2))
+	
 	for i:=0; i < model.Nobj; i++ {
-		model.Obj_sense[i] = int(obj_byte[i])
+		model.Obj_sense[i] = int(obj[i])	
 	}
+	for i:=0; i < model.Nvar; i++ {
+		model.Vblo[i] = vb[2*i]
+		model.Vbup[i] = vb[2*i+1]
+	}
+	for i:=0; i < model.Ncon; i++ {
+		model.RHSlo[i] = rhs[2*i]
+		model.RHSup[i] = rhs[2*i+1]
+	}
+	
+	//Filling in constraint type
+	
 
-//Filling in Var_name, Con_name, and Obj_name
+	//Filling in Con_name, Obj_name, and Var_name
 	for i:=0; i < model.Ncon; i++ {
 		conname := C.con_name_ASL((*C.struct_ASL)(unsafe.Pointer(asl)),C.int(i))
 		model.Con_name[i] = C.GoString(conname)
 	}
-
 	for i:=0; i < model.Nobj; i++ {
 		objname := C.obj_name_ASL((*C.struct_ASL)(unsafe.Pointer(asl)),C.int(i))
 		model.Obj_name[i] = C.GoString(objname)
@@ -191,41 +203,7 @@ func AMPL_init(stub string) AMPL{
 		model.Var_name[i] = C.GoString(varname)
 	}
 
-//setting variable bounds
-	LUv := unsafe.Pointer(C.asl_LUv(asl))
-	//defer C.free(LUv)
-	hdr := reflect.SliceHeader{
-		Data: uintptr(LUv),
-		Len: model.Nvar*2,
-		Cap: model.Nvar*2,
-	}
-	Vb := *(*[]float64)(unsafe.Pointer(&hdr))
-	ii:=0
-	for ii < model.Nvar {
-		model.Vblo[ii] = Vb[2*ii]
-		model.Vbup[ii] = Vb[2*ii+1]
-		ii++
-	}
-
-//setting upper and lower rhs
-	LUrhs := unsafe.Pointer(C.asl_LUrhs(asl))
-	//defer C.free(LUrhs)
-	hdr2 := reflect.SliceHeader{
-		Data: uintptr(LUrhs),
-		Len: model.Ncon*2,
-		Cap: model.Ncon*2,
-	}
-	rhs := *(*[]float64)(unsafe.Pointer(&hdr2))
-	jj:=0
-	for jj < model.Ncon {
-		model.RHSlo[jj] = rhs[2*jj]
-		model.RHSup[jj] = rhs[2*jj+1]
-		jj++
-	}
-
-	/* Filling in variable type
-	* NL = Non Linear, LA = Linear Arcs, OL = Other Linear, B = Binary, I = Other Integer
-	*/
+	//Filling in Variable type (Var_type)
 	k:=0
 	for i:= 0; i < int(C.asl_nlvar(asl)); i++ {
 		model.Var_type[k] = "NL"
@@ -242,9 +220,8 @@ func AMPL_init(stub string) AMPL{
 	for i:= 0; i < int(C.asl_niv(asl)); i++ {
 		model.Var_type[k] = "I"	
 		k++	}
-	/* Filling in constraint type
-	* NLG = Non Linear General, NLN = Non Linear Network, LN = Linear Network, LG = Linear General
-	*/
+
+	//Filling in Constraint Algebraic Shape (Con_alg)
 	j:=0
 	for i:=0; i < int(C.asl_nlgeneral(asl)); i++ {
 		model.Con_alg[j] = "NLG"
@@ -258,30 +235,28 @@ func AMPL_init(stub string) AMPL{
 	for i:=0; i < int(C.asl_lgeneral(asl)); i++ {
 		model.Con_alg[j] = "LG"
 		j++	}
-
-	/*
-	* Filling Cons, Varcons, Obj, and Varobj
-	*/
 	
+	//Filling in Cons and Varcons
 	for i:=0; i < model.Ncon; i++ {
 		cgrad:= C.asl_Cgrad(asl, C.int(i))
 		for cgrad != nil {
 			varno:= int(cgrad.varno)
 			model.Cons[i] = append(model.Cons[i], model.Var_name[varno])
 			if !contains(model.Varcons[varno], model.Con_name[i]) {
-				model.Varcons[varno]=append(model.Varcons[varno], model.Con_name[i])			
+				model.Varcons[varno] = append(model.Varcons[varno], model.Con_name[i])			
 			}	
 			cgrad = cgrad.next	
 		}
 	}
 
+	//Filling in Obj and Varobj
 	for i:=0; i < model.Nobj; i++ {
 		ograd:= C.asl_Ograd(asl, C.int(i))
 		for ograd != nil {
 			varno:= int(ograd.varno)
 			model.Obj[i] = append(model.Obj[i], model.Var_name[varno])
 			if !contains(model.Varobj[varno], model.Obj_name[i]) {
-				model.Varobj[varno] =append(model.Varobj[varno], model.Obj_name[i])			
+				model.Varobj[varno] = append(model.Varobj[varno], model.Obj_name[i])			
 			}
 			ograd = ograd.next	
 		}
@@ -311,7 +286,7 @@ func Objval(model AMPL, nobj int, point []float64) (result float64, nerror int){
 }
 
 /*
-*	Returns the gradient vector of constraint (ncon) at the given point
+*	Returns the gradient vector of constraint (ncon) at the given point and number of errors
 */
 func Congrd(model AMPL, ncon int, point []float64) (gradvec []float64, nerror int){
 	var ne C.fint
@@ -324,7 +299,7 @@ func Congrd(model AMPL, ncon int, point []float64) (gradvec []float64, nerror in
 }
 
 /*
-*	Returns the gradient vector of objective (nobj) at the given point
+*	Returns the gradient vector of objective (nobj) at the given point and number of errors
 */
 func Objgrd(model AMPL, nobj int, point []float64) (gradvec []float64, nerror int){
 	var ne C.fint
@@ -336,22 +311,23 @@ func Objgrd(model AMPL, nobj int, point []float64) (gradvec []float64, nerror in
 	return grad, int(ne)
 }
 
-/*
+/*------------------------------------------------------------------------------------------
 *	Functions used for AMPL_init()
 */
 func arrayToSlice(array unsafe.Pointer, length int) unsafe.Pointer {
-	defer C.free(array)
 	slice := reflect.SliceHeader{
 		Data: uintptr(array),
-		Len: length*2,
-		Cap: length*2,
+		Len: length,
+		Cap: length,
 	}
 	return unsafe.Pointer(&slice)
 }
 
 func contains(list []string, s string) bool{
 	for i:=0; i < len(list); i++ {
-		if list[i] == s { return true }
+		if list[i] == s {
+			return true
+		}
 	}
 	return false
 }
